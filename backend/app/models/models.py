@@ -89,6 +89,13 @@ class Game(Base):
     move_history = Column(JSON, default=[])
     current_turn = Column(Integer)  # Player ID whose turn it is
     
+    # Time control (chess clock)
+    time_control = Column(Integer, default=600)  # Total time in seconds (default 10 min)
+    time_increment = Column(Integer, default=5)  # Increment per move in seconds
+    player1_time_left = Column(Integer)  # Remaining time for player1 in seconds
+    player2_time_left = Column(Integer)  # Remaining time for player2 in seconds
+    last_move_time = Column(DateTime(timezone=True))  # When last move was made
+    
     # Results
     winner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     is_draw = Column(Boolean, default=False)

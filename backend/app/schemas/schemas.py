@@ -66,6 +66,8 @@ class GameCreate(BaseModel):
     mode: GameModeEnum
     bet_amount: float = Field(..., gt=0)
     ai_difficulty: Optional[str] = None
+    time_control: Optional[int] = 600  # Total time in seconds (default 10 minutes)
+    time_increment: Optional[int] = 5  # Increment per move (default 5 seconds)
 
 
 class GameMove(BaseModel):
@@ -83,6 +85,11 @@ class GameResponse(BaseModel):
     player2_id: Optional[int]
     current_turn: Optional[int]
     board_state: Optional[dict]
+    time_control: Optional[int]
+    time_increment: Optional[int]
+    player1_time_left: Optional[int]
+    player2_time_left: Optional[int]
+    last_move_time: Optional[datetime]
     created_at: datetime
     
     class Config:

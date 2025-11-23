@@ -6,6 +6,7 @@ from app.schemas.schemas import GameCreate, GameResponse, GameMove
 from app.api.endpoints.auth import get_current_user
 from app.services.game_service import GameService
 from typing import List
+from datetime import datetime
 
 router = APIRouter()
 
@@ -69,6 +70,8 @@ def create_game(
             existing_game.player2_id = current_user.id
             existing_game.player2_rating_before = current_user.rating
             existing_game.status = GameStatus.IN_PROGRESS
+            existing_game.started_at = datetime.utcnow()
+            existing_game.last_move_time = datetime.utcnow()
             current_user.balance -= existing_game.bet_amount
             
             db.commit()
@@ -82,7 +85,11 @@ def create_game(
                 mode=GameMode.VS_PLAYER,
                 bet_amount=game_data.bet_amount,
                 status=GameStatus.WAITING,
-                player1_rating_before=current_user.rating
+                player1_rating_before=current_user.rating,
+                time_control=game_data.time_control or 600,
+                time_increment=game_data.time_increment or 5,
+                player1_time_left=game_data.time_control or 600,
+                player2_time_left=game_data.time_control or 600
             )
             current_user.balance -= game_data.bet_amount
             db.add(game)
@@ -236,6 +243,8 @@ def join_game(
     game.player2_rating_before = current_user.rating
     game.status = GameStatus.IN_PROGRESS
     game.current_turn = game.player1_id
+    game.started_at = datetime.utcnow()
+    game.last_move_time = datetime.utcnow()
     
     # Initialize board
     from app.games.draughts_engine import DraughtsEngine
