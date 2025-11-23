@@ -49,18 +49,45 @@ def create_game(
             game_data.ai_difficulty
         )
     else:
-        # Create a waiting game for player vs player
-        game = Game(
-            player1_id=current_user.id,
-            mode=GameMode.VS_PLAYER,
-            bet_amount=game_data.bet_amount,
-            status=GameStatus.WAITING,
-            player1_rating_before=current_user.rating
-        )
-        current_user.balance -= game_data.bet_amount
-        db.add(game)
-        db.commit()
-        db.refresh(game)
+        # Check for existing waiting game with same bet amount (auto-matching)
+        existing_game = db.query(Game).filter(
+            Game.status == GameStatus.WAITING,
+            Game.mode == GameMode.VS_PLAYER,
+            Game.bet_amount == game_data.bet_amount,
+            Game.player1_id != current_user.id
+        ).first()
+        
+        if existing_game:
+            # Auto-match with existing game
+            if current_user.balance < existing_game.bet_amount:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Insufficient balance"
+                )
+            
+            # Join the existing game
+            existing_game.player2_id = current_user.id
+            existing_game.player2_rating_before = current_user.rating
+            existing_game.status = GameStatus.IN_PROGRESS
+            current_user.balance -= existing_game.bet_amount
+            
+            db.commit()
+            db.refresh(existing_game)
+            
+            return existing_game
+        else:
+            # Create a new waiting game
+            game = Game(
+                player1_id=current_user.id,
+                mode=GameMode.VS_PLAYER,
+                bet_amount=game_data.bet_amount,
+                status=GameStatus.WAITING,
+                player1_rating_before=current_user.rating
+            )
+            current_user.balance -= game_data.bet_amount
+            db.add(game)
+            db.commit()
+            db.refresh(game)
     
     if not game:
         raise HTTPException(
