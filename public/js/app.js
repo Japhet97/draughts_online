@@ -33,11 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Auth functions
-function showTab(tab) {
+function showTab(tab, buttonElement) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
   
-  event.target.classList.add('active');
+  if (buttonElement) {
+    buttonElement.classList.add('active');
+  }
   document.getElementById(`${tab}-tab`).classList.add('active');
 }
 
@@ -84,12 +86,14 @@ async function handleLogout() {
   showMessage('Logged out successfully', 'info');
 }
 
-async function loadUserProfile() {
+async function loadUserProfile(showUI = true) {
   const response = await apiCall('/api/auth/profile', 'GET');
   
   if (response.username) {
     currentUser = response;
-    showProfileSection();
+    if (showUI) {
+      showProfileSection();
+    }
   } else {
     sessionToken = null;
     localStorage.removeItem('sessionToken');
@@ -108,8 +112,8 @@ async function handleCreateGame(e) {
   if (response.success) {
     showMessage('Game created successfully!', 'success');
     currentGame = response.game;
-    showGameSection();
-    loadUserProfile(); // Refresh balance
+    await loadUserProfile(false); // Refresh balance without showing UI
+    showGameSection(); // Then show game
   } else {
     showMessage(response.error || 'Failed to create game', 'error');
   }
