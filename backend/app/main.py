@@ -13,10 +13,10 @@ app = FastAPI(
     description="Online Draughts Gaming Platform with Real Money Betting"
 )
 
-# Configure CORS
+# Configure CORS - Allow all origins for mobile testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^http://localhost(:\d+)?$",
+    allow_origins=["*"],  # Allow all for development/mobile testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
